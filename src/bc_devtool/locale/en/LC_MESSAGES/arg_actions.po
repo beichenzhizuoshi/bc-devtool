@@ -1,0 +1,95 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-09-29 22:27+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: .\src\devtools\arg_actions.py:98 .\src\devtools\arg_actions.py:97
+msgid ""
+"输入无效的路径: {} {}\n"
+"参数帮助:\n"
+"\t{}"
+msgstr ""
+"Invalid path input: {} {}\n"
+"Parameter help:\n"
+"\t{}"
+
+#: .\src\devtools\arg_actions.py:103 .\src\devtools\arg_actions.py:102
+msgid "输入参数不能为空: {}"
+msgstr "Input can not be empty: {}"
+
+#: .\src\devtools\arg_actions.py:122 .\src\devtools\arg_actions.py:126
+#: .\src\devtools\arg_actions.py:121 .\src\devtools\arg_actions.py:125
+msgid ""
+"输入无效的文件路径: {} {}\n"
+"参数帮助:\n"
+"\t{}"
+msgstr ""
+"Invalid file path entered: {} {}\n"
+"Parameter help:\n"
+"\t{}"
+
+#: .\src\devtools\arg_actions.py:138 .\src\devtools\arg_actions.py:141
+#: .\src\devtools\arg_actions.py:137 .\src\devtools\arg_actions.py:140
+msgid ""
+"输入无效的目录: {} {}\n"
+"参数帮助:\n"
+"\t{}"
+msgstr ""
+"Invalid directory entry: {} {}\n"
+"Parameter help:\n"
+"\t{}"
+
+#: .\src\devtools\arg_actions.py:356 .\src\devtools\arg_actions.py:358
+msgid "输入参数(`{}`)范围错误, 期望范围: {} ~ {}, 实际输入: {}"
+msgstr ""
+"Input parameter (`{}`) range error, expected range: {} ~ {}, actual input: {}"
+
+#: .\src\devtools\arg_actions.py:481 .\src\devtools\arg_actions.py:483
+msgid "条件子命令参数必须指定一个可回调的参数处理函数 callback 不能为空"
+msgstr ""
+"The conditional subcommand parameter must specify a callback parameter "
+"handler function callback cannot be empty"
+
+#: .\src\devtools\arg_actions.py:505 .\src\devtools\arg_actions.py:507
+msgid "条件参数必须指定一个可回调的参数处理函数 callback 不能为空"
+msgstr ""
+"The condition parameter must specify a callback parameter handler function "
+"callback cannot be empty"
+
+#: .\src\devtools\arg_actions.py:819 .\src\devtools\arg_actions.py:821
+msgid "值是无效的文件路径: {} = {}"
+msgstr "Value is an invalid file path: {} = {}"
+
+#: .\src\devtools\arg_actions.py:821 .\src\devtools\arg_actions.py:823
+msgid "文件路径不存在: {} = {}"
+msgstr "file path does not exist: {} = {}"
+
+#: .\src\devtools\arg_actions.py:824 .\src\devtools\arg_actions.py:826
+msgid "值是无效的目录: {} = {}"
+msgstr "Value is an invalid directory: {} = {}"
+
+#: .\src\devtools\arg_actions.py:826 .\src\devtools\arg_actions.py:828
+msgid "目录路径不存在: {} = {}"
+msgstr "Directory path does not exist: {} = {}"
+
+#: .\src\devtools\arg_actions.py:829 .\src\devtools\arg_actions.py:831
+msgid "路径不存在: {} = {}"
+msgstr "Path does not exist: {} = {}"
+
+#: .\src\devtools\arg_actions.py:562 .\src\devtools\arg_actions.py:571
+msgid "(在指定参数之前,依赖其它参数必须被指定: {})"
+msgstr "(Before specifying parameters, other parameters must be specified: {})"

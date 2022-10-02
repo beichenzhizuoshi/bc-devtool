@@ -1,0 +1,62 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-09-29 21:25+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: .\src\devtools\file_util.py:374 .\src\devtools\file_util.py:471
+msgid "检测文件 {} 编码 {} 精确度太低: {}, 最小处理精确度: {}"
+msgstr "Detected file {} encoding {} too low precision: {}, minimum processing precision: {}"
+
+#: .\src\devtools\file_util.py:384
+msgid "输入文件 {} 编码不支持: {}"
+msgstr "Input file {} encoding not supported: {}"
+
+#: .\src\devtools\file_util.py:394
+msgid "输入文件 {} 不能转换为不支持的编码: {}"
+msgstr "Input file {} cannot be converted to an unsupported encoding: {}"
+
+#: .\src\devtools\file_util.py:415
+msgid "转换文件 {} 编码成功: {} =====> {}"
+msgstr "Convert file {} encoding successfully: {} =====> {}"
+
+#: .\src\devtools\file_util.py:417
+msgid "文件 {} 编码 {} 与实际不匹配, 失败原因: {}"
+msgstr "File {} encoding {} does not match actual, failure reason: {}"
+
+#: .\src\devtools\file_util.py:420 .\src\devtools\file_util.py:461
+msgid "文件 {} 编码转换错误: {} =====> {}, 失败原因: {}"
+msgstr "File {} encoding conversion error: {} =====> {}, failure reason: {}"
+
+#: .\src\devtools\file_util.py:439
+msgid "替换文件 {} 内容成功: {} =====> {}"
+msgstr "Replaced file {} content successfully: {} =====> {}"
+
+#: .\src\devtools\file_util.py:456
+msgid "转换包含中文的文件 {} 编码: {} =====> {}"
+msgstr "Convert files containing Chinese {} encoding: {} =====> {}"
+
+#: .\src\devtools\file_util.py:480
+msgid "检测文件 {} 编码不匹配: {} =====> {}"
+msgstr "Detect file {} encoding mismatch: {} =====> {}"
+
+#: .\src\devtools\file_util.py:500
+msgid "转换内容前后一致 {} =====> {}"
+msgstr "Convert content consistent {} =====> {}"
+
+#: .\src\devtools\file_util.py:536
+msgid "操作发生异常: {}"
+msgstr "Operation exception: {}"

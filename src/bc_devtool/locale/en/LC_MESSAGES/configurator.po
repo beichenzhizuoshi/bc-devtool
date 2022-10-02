@@ -1,0 +1,159 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-09-28 23:35+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: .\src\devtools\configurator.py:28
+msgid "写入空配置错误: {}"
+msgstr "Error writing empty config: {}"
+
+#: .\src\devtools\configurator.py:107
+msgid "没找到指定的配置文件,如果不存在请先创建它再获取配置: {}"
+msgstr "the specified configuration file was not found, if it does not exist, please create it first and then get the configuration: {}"
+
+#: .\src\devtools\configurator.py:168
+msgid "属性还未初始化: _configs"
+msgstr "property has not been initialized: _configs"
+
+#: .\src\devtools\configurator.py:173
+msgid "类存在未知属性: {}, 属性名: {}"
+msgstr "class has unknown attribute: {}, attribute name: {}"
+
+#: .\src\devtools\configurator.py:174 .\src\devtools\configurator.py:276
+msgid "未知属性: {}"
+msgstr "unknown attribute: {}"
+
+#: .\src\devtools\configurator.py:319
+msgid "参数不能为空: {}"
+msgstr "argument cannot be empty: {}"
+
+#: .\src\devtools\configurator.py:360 .\src\devtools\configurator.py:369
+msgid "无效路径: {}"
+msgstr "Invalid path: {}"
+
+#: .\src\devtools\configurator.py:378 .\src\devtools\configurator.py:386
+msgid "无效文件路径: {}"
+msgstr "Invalid file path: {}"
+
+#: .\src\devtools\configurator.py:420
+msgid "期望输入类型为 int, 实际输入类型是: {}"
+msgstr "Expected input type is int, actual input type is: {}"
+
+#: .\src\devtools\configurator.py:432
+msgid "期望输入类型为 str, 实际输入类型是: {}"
+msgstr "The expected input type is str, the actual input type is: {}"
+
+#: .\src\devtools\configurator.py:461
+msgid "期望输入类型为 bool, 实际输入类型是: {}"
+msgstr "Expected input type is bool, actual input type is: {}"
+
+#: .\src\devtools\configurator.py:480
+msgid "无效参数({})不能转换为 bool 值: {}"
+msgstr "Invalid argument ({}) cannot be converted to a bool value: {}"
+
+#: .\src\devtools\configurator.py:513
+msgid "不能获取配置选项: {}, 节区: {}"
+msgstr "Could not get config options: {}, section: {}"
+
+#: .\src\devtools\configurator.py:603
+msgid "反序列化类型必须是 `{}` 的子类"
+msgstr "The unserialized type must be a subclass of `{}`"
+
+#: .\src\devtools\configurator.py:614
+#, python-format
+msgid "输入的配置文件路径是目录而非文件: %s"
+msgstr "The configuration file path entered is a directory not a file: %s"
+
+#: .\src\devtools\configurator.py:620
+#, python-format
+msgid "配置文件路径不存在: %s"
+msgstr "Configuration file path does not exist: %s"
+
+#: .\src\devtools\configurator.py:630
+#, python-format
+msgid "删除配置文件成功: %s"
+msgstr "Deleting configuration file succeeded: %s"
+
+#: .\src\devtools\configurator.py:635
+msgid "没有配置有关配置文件选项的设置"
+msgstr "There are no settings configured for configuration file options"
+
+#: .\src\devtools\configurator.py:640
+#, python-format
+msgid "类不是有效的参数配置类型,必须包含 args 静态成员: %s"
+msgstr "Class is not a valid parameter configuration type, must contain args static member: %s"
+
+#: .\src\devtools\configurator.py:645
+#, python-format
+msgid "当前配置文件激活的节区: %s"
+msgstr "Sections active for the current profile: %s"
+
+#: .\src\devtools\configurator.py:652
+msgid "无选项描述信息"
+msgstr "no option description"
+
+#: .\src\devtools\configurator.py:669
+msgid "配置文件修改"
+msgstr "Configuration file modification"
+
+#: .\src\devtools\configurator.py:670
+msgid "指定当前配置文件路径"
+msgstr "Specify the current configuration file path"
+
+#: .\src\devtools\configurator.py:684
+msgid "使用全局配置文件"
+msgstr "Use a global configuration file"
+
+#: .\src\devtools\configurator.py:687
+msgid "查看配置文件"
+msgstr "View configuration files"
+
+#: .\src\devtools\configurator.py:688
+msgid "删除配置文件"
+msgstr "delete configuration files"
+
+#: .\src\devtools\configurator.py:689
+msgid "删除当前节区的所有键"
+msgstr "delete all keys in the current section"
+
+#: .\src\devtools\configurator.py:691
+msgid "删除指定键"
+msgstr "delete the specified key"
+
+#: .\src\devtools\configurator.py:692
+msgid "查看可配置的选项"
+msgstr "View configurable options"
+
+#: .\src\devtools\configurator.py:696
+msgid "指定全局配置文件路径"
+msgstr "Specify the global configuration file path"
+
+#: .\src\devtools\configurator.py:699
+msgid "节区名字"
+msgstr "section name"
+
+#: .\src\devtools\configurator.py:703
+msgid "键名称"
+msgstr "key name"
+
+#: .\src\devtools\configurator.py:722
+msgid "选项帮助"
+msgstr "option help"
+
+#: .\src\devtools\configurator.py:724
+msgid "设置要修改的值,支持str,int,bool,路径和对应的list类型,使用 `,` 分割list"
+msgstr "Set the value to be modified, support str, int, bool, path and the corresponding list type, use `,` to split the list"

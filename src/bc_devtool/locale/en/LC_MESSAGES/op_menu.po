@@ -1,0 +1,166 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-09-29 21:42+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: .\src\devtools\op_menu.py:29
+msgid "指定签名私钥文件,如果有密码则需要指定 key-pass,必须是 PKCS #8 DER 格式"
+msgstr "Specify the signature private key file. If there is a password, you need to specify key-pass, which must be in PKCS #8 DER format"
+
+#: .\src\devtools\op_menu.py:30
+msgid "配置签名私钥文件,签名 APK/AAB/JAR 包使用"
+msgstr "Configure the signature private key file and use the signature APK/AAB/JAR package"
+
+#: .\src\devtools\op_menu.py:31
+msgid "私钥文件需要密码时指定"
+msgstr "Specify when the private key file requires a password"
+
+#: .\src\devtools\op_menu.py:31
+msgid "指定签名文件所需的密码"
+msgstr "Specify the password required to sign the file"
+
+#: .\src\devtools\op_menu.py:32
+msgid "指定证书链,必须是 x509.pem或der格式"
+msgstr "Specifies the certificate chain, which must be in x509.pem or der format"
+
+#: .\src\devtools\op_menu.py:33
+msgid "指定 apksigner.jar 的路径,默认从当前执行目录查找"
+msgstr "Specify the path of apksigner.jar, which is searched from the current execution directory by default"
+
+#: .\src\devtools\op_menu.py:34
+msgid "输出文件替换输入文件"
+msgstr "The output file replaces the input file"
+
+#: .\src\devtools\op_menu.py:35
+msgid "指定输出文件路径,未指定则在输入文件名后加上 .sign 后缀"
+msgstr "Specify the output file path, if not specified, add the .sign suffix to the input file name"
+
+#: .\src\devtools\op_menu.py:36
+msgid "查看apk,jar,aab文件签名"
+msgstr "View apk, jar, aab file signatures"
+
+#: .\src\devtools\op_menu.py:37
+msgid "输入的apk,jar,aab文件路径"
+msgstr "Input apk, jar, aab file path"
+
+#: .\src\devtools\op_menu.py:62
+#, python-format
+msgid "创建上下文菜单: %s"
+msgstr "Create context menu: %s"
+
+#: .\src\devtools\op_menu.py:84
+#, python-format
+msgid "默认签名jar文件无效: %s"
+msgstr "Invalid default signed jar file: %s"
+
+#: .\src\devtools\op_menu.py:87 .\src\devtools\op_menu.py:116
+#, python-format
+msgid "输入文件: %s"
+msgstr "Input file: %s"
+
+#: .\src\devtools\op_menu.py:101
+#, python-format
+msgid "默认私钥文件无效: %s"
+msgstr "Invalid default private key file: %s"
+
+#: .\src\devtools\op_menu.py:104
+#, python-format
+msgid "默认证书链文件无效: %s"
+msgstr "Invalid default certificate chain file: %s"
+
+#: .\src\devtools\op_menu.py:168
+#, python-format
+msgid "删除键: %s"
+msgstr "Delete key: %s"
+
+#: .\src\devtools\op_menu.py:194
+#, python-format
+msgid "不支持的 shell,无法自动调用 shell 命令: %s"
+msgstr "Unsupported shell, cannot automatically invoke shell command: %s"
+
+#: .\src\devtools\op_menu.py:199
+#, python-format
+msgid "不存在指定 shell ('%s'), 如果确定存在请将它添加到环境变量中\n错误如下:\n%s"
+msgstr "The specified shell ('%s') does not exist, if you are sure it exists, please add it to the environment variable\nThe error is as follows:\n%s"
+
+#: .\src\devtools\op_menu.py:204
+msgid "计算文件Hash(&H)"
+msgstr "Calculate file hash(&H)"
+
+#: .\src\devtools\op_menu.py:206
+msgid "签名文件(&P)"
+msgstr "Signature File(&P)"
+
+#: .\src\devtools\op_menu.py:207
+msgid "查看签名(&S)"
+msgstr "View Signature(&S)"
+
+#: .\src\devtools\op_menu.py:210
+msgid "打开至jadx(&J)"
+msgstr "Open to Jadx(&J)"
+
+#: .\src\devtools\op_menu.py:220
+msgid "windows上下文快捷菜单"
+msgstr "windows context menu"
+
+#: .\src\devtools\op_menu.py:222
+msgid "输出更详细的日志"
+msgstr "output more verbose logs"
+
+#: .\src\devtools\op_menu.py:224
+msgid "可选的子功能"
+msgstr "optional features"
+
+#: .\src\devtools\op_menu.py:227
+msgid "签名apk,jar,aab等文件 (默认动作)"
+msgstr "Sign apk, jar, aab and other files (default action)"
+
+#: .\src\devtools\op_menu.py:230
+msgid "修改windows上下文菜单配置"
+msgstr "Modify windows context menu configuration"
+
+#: .\src\devtools\op_menu.py:232
+msgid "计算文件 hash 值"
+msgstr "Calculate the file hash value"
+
+#: .\src\devtools\op_menu.py:233
+msgid "输入文件"
+msgstr "Input file"
+
+#: .\src\devtools\op_menu.py:236
+msgid "注册/删除右键菜单,需要管理员权限运行"
+msgstr "Register/delete right-click menu, requires administrator privileges to run"
+
+#: .\src\devtools\op_menu.py:237
+msgid "右键菜单名称"
+msgstr "right-click menu name"
+
+#: .\src\devtools\op_menu.py:237
+msgid "开发者工具"
+msgstr "developer tools"
+
+#: .\src\devtools\op_menu.py:238
+msgid "删除注册菜单"
+msgstr "delete registration menu"
+
+#: .\src\devtools\op_menu.py:239
+msgid "选择使用的 shell, 根据自身系统的安装情况选择"
+msgstr "Select the shell to use, according to the installation of your own system"
+
+#: .\src\devtools\op_menu.py:241
+msgid "设置快速 jadx 打开 apk"
+msgstr "set up quick jadx open apk"
