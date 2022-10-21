@@ -26,7 +26,7 @@ DEFAULT_JAVA_OPT = '-Xmx1024M -Xss1m'
 DEFAULT_SIGN_JAR = 'apksigner.jar'
 SECTION_SIGN = 'menu_sign'
 MENU_COMMAND_NAME = '*\\shell\\devtools'
-DEFAULT_MENU_CMD = 'devtools-menu'
+DEFAULT_MENU_CMD = 'bc-devtool-menu'
 
 
 class SignatureElement(aa.BaseSerialization):
