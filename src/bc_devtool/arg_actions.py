@@ -58,7 +58,9 @@ def _create_action_object(create_type,
   registry['help'] = argparse._HelpAction
   registry['version'] = argparse._VersionAction
   registry['parsers'] = argparse._SubParsersAction
-  registry['extend'] = argparse._ExtendAction
+
+  if sys.version_info.major >= 3 and sys.version_info.minor >= 8:
+    registry['extend'] = argparse._ExtendAction
 
   if create_type is None:
     create_type = argparse._StoreAction
