@@ -121,8 +121,7 @@ def get_logger_file(path: str, level: int = logging.DEBUG, console_out: bool = T
   log.setLevel(level)
   if console_out:
     console_handler = logging.StreamHandler(sys.stdout)
-    console_handler.setFormatter(
-        logging.Formatter('%(levelname)s: %(message)s'))
+    console_handler.setFormatter(logging.Formatter('%(levelname)s: %(message)s'))
     log.addHandler(console_handler)
   if file.is_file():
     file_handler = logging.FileHandler(path, 'a', encoding='utf-8')

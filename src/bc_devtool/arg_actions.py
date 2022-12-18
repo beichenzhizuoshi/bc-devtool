@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import enum
 import gettext
+import inspect
 import sys
 from ctypes import ArgumentError
 from pathlib import Path
@@ -14,9 +15,9 @@ from typing import List
 from typing import Type
 from typing import TypeVar
 
-_ = gettext.translation('arg_actions', Path.joinpath(
-    Path(__file__).parent, 'locale'), fallback=True).gettext
+_ = gettext.translation('arg_actions', Path.joinpath(Path(__file__).parent, 'locale'), fallback=True).gettext
 AT = TypeVar('AT', bound=argparse.Action)
+_default = object()
 
 
 def _format_action_help(action: argparse.Action):
@@ -25,28 +26,133 @@ def _format_action_help(action: argparse.Action):
   return format.format_help()
 
 
-class RequiredAction(argparse._StoreAction):
-  """条件选项动作, 一个选项可以依赖其它多个选项,
-  当该选项值是指定的值时则必须存在其它参数
+def remove_action_keys(parser: argparse.ArgumentParser, *args: list[str]):
+  for key in args:
+    for action in parser._actions:
+      if action.dest == key:
+        parser._actions.remove(action)
+        break
+
+
+def remove_actions(parser: argparse.ArgumentParser, *args: list[AT]):
+  for arg in args:
+    for action in parser._actions:
+      if action == arg:
+        parser._actions.remove(action)
+        break
+
+
+def _create_action_object(create_type,
+                          option_strings,
+                          dest,
+                          *args,
+                          **kwargs):
+  registry = {}
+  registry['store'] = argparse._StoreAction
+  registry['store_const'] = argparse._StoreConstAction
+  registry['store_true'] = argparse._StoreTrueAction
+  registry['store_false'] = argparse._StoreFalseAction
+  registry['append'] = argparse._AppendAction
+  registry['append_const'] = argparse._AppendConstAction
+  registry['count'] = argparse._CountAction
+  registry['help'] = argparse._HelpAction
+  registry['version'] = argparse._VersionAction
+  registry['parsers'] = argparse._SubParsersAction
+  registry['extend'] = argparse._ExtendAction
+
+  if create_type is None:
+    create_type = argparse._StoreAction
+  elif isinstance(create_type, str):
+    create_type = registry.get(create_type, None)
+
+  if create_type is None or not isinstance(create_type, type):
+    raise ArgumentError(f'unknown action type: {create_type}')
+
+  signature = inspect.signature(create_type.__init__)
+  kwargs['option_strings'] = option_strings
+  kwargs['dest'] = dest
+  keyword_params = dict()
+  position_params = []
+  kinds = [param.kind for param in signature.parameters.values()]
+  has_positional_var = False
+  has_var_keyword = inspect.Parameter.VAR_KEYWORD in kinds
+
+  def _get_default_value(param):
+    val = kwargs.pop(param.name, _default)
+    if val is _default:
+      if param.default is inspect.Parameter.empty:
+        val = None
+      else:
+        val = param.default
+    return val
+
+  for param in signature.parameters.values():
+    if param.name == 'self':
+      continue
+    if param.kind == inspect.Parameter.POSITIONAL_ONLY:
+      position_params.append(_get_default_value(param))
+    elif param.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD or param.kind == inspect.Parameter.KEYWORD_ONLY:
+      if not has_var_keyword:
+        keyword_params[param.name] = _get_default_value(param)
+    elif param.kind == inspect.Parameter.VAR_POSITIONAL:
+      has_positional_var = True
+
+  if has_var_keyword:
+    if has_positional_var:
+      action = create_type(*position_params, *args, **kwargs)
+    else:
+      action = create_type(*position_params, **kwargs)
+  else:
+    if has_positional_var:
+      action = create_type(*position_params, *args, **keyword_params)
+    else:
+      action = create_type(*position_params, **keyword_params)
+  return action
+
+
+class _RequiredAction(argparse.Action):
+  """条件依赖动作, 一个选项可以依赖其它多个选项,
+  当选项值是字符串时,还可根据具体的字符串依赖不同参数
   """
 
-  def __init__(self, option_strings, dest, bind_value=True, nargs=None, **kwargs) -> None:
+  def __init__(self,
+               option_strings,
+               dest,
+               actions: list[AT] = [],
+               action_type=argparse._StoreAction,
+               bind_value=False,
+               nargs=None,
+               const=None,
+               default=None,
+               type=None,
+               choices=None,
+               required=False,
+               help=None,
+               metavar=None,
+               *args,
+               **kwargs) -> None:
     self._actions: dict[str, set[AT]] = {}
+    self._actions[None] = set(actions)
+    self._action: argparse.Action = _create_action_object(action_type, option_strings, dest, nargs=nargs, const=const,
+                                                          default=default, type=type, choices=choices, required=required,
+                                                          help=help, metavar=metavar, *args, **kwargs)
+    super().__init__(option_strings, dest, self._action.nargs, self._action.const,
+                     self._action.default, self._action.type, self._action.choices,
+                     self._action.required, self._action.help, self._action.metavar)
+    # 当 bind_value 值为 True 时,根据实际参数的值来切换不同的请求项
     self._bind_value = bind_value
-    super().__init__(option_strings, dest, nargs, **kwargs)
 
   def set_bind_value(self, bind: bool = True):
     self._bind_value = bind
 
-  def add_required(self, required_value: str, *action_objs: AT) -> None:
+  def add_required(self, need_value: str, *action_objs: AT) -> None:
     """添加依赖参数,当参数值与指定的 required_value 值匹配时,
     则其它依赖参数必须被赋值
-
     Args:
         required_value (str): 请求的参数值
     """
-    required_value = required_value if self._bind_value else None
-    actions = self._actions.get(required_value)
+    need_value = need_value if self._bind_value else None
+    actions = self._actions.get(need_value)
     for action in action_objs:
       if action is None:
         continue
@@ -54,10 +160,10 @@ class RequiredAction(argparse._StoreAction):
         actions.add(action)
       else:
         actions = set({action})
-        self._actions[required_value] = actions
+        self._actions[need_value] = actions
 
-  def get_required(self, value) -> set[AT]:
-    cond = value if self._bind_value else None
+  def get_required(self, need_value) -> set[AT]:
+    cond = need_value if self._bind_value else None
     if isinstance(cond, list):
       actions = set()
       for c in cond:
@@ -73,13 +179,13 @@ class RequiredAction(argparse._StoreAction):
         requires.add(e)
     return requires
 
+  def __call__(self, parser, namespace, values, option_string=None) -> None:
+    self._action(parser, namespace, values, option_string)
 
-class TrueRequiredAction(RequiredAction):
+
+class TrueRequiredAction(_RequiredAction):
   """条件必须参数依赖,当一个参数是满足指定值时则依赖它的其它参数都是必须参数
   唯一限制是传参时条件参数必须先指定,后才能跟依赖参数,否则后初始化无法影响之前的值
-
-  Args:
-      argparse (_type_): 默认操作是 StoreAction
   """
 
   def __call__(self, parser, namespace, values, option_string=None) -> None:
@@ -88,9 +194,8 @@ class TrueRequiredAction(RequiredAction):
     super().__call__(parser, namespace, values, option_string)
 
 
-class FalseRequiredAction(RequiredAction):
-  """条件参数排斥依赖,当该参数满足某条件时,其它 action 必须不存在,
-  因为
+class FalseRequiredAction(_RequiredAction):
+  """条件参数排斥依赖,当该参数满足某条件时,其它 action 必须不存在
   """
 
   def __call__(self, parser, namespace, values, option_string=None):
@@ -99,20 +204,71 @@ class FalseRequiredAction(RequiredAction):
     super().__call__(parser, namespace, values, option_string)
 
 
+class RemoveAction(argparse.Action):
+  def __init__(self,
+               option_strings,
+               dest,
+               action_type=argparse._StoreAction,
+               remove_actions: list[AT] = [],
+               remove_keys: list[str] = [],
+               nargs=None,
+               const=None,
+               default=None,
+               type=None,
+               choices=None,
+               required=False,
+               help=None,
+               metavar=None,
+               *args,
+               **kwargs) -> None:
+    self._action: argparse.Action = _create_action_object(action_type, option_strings, dest, nargs=nargs, const=const,
+                                                          default=default, type=type, choices=choices, required=required,
+                                                          help=help, metavar=metavar, *args, **kwargs)
+    self.removes = remove_actions
+    self.remove_keys = remove_keys
+    super().__init__(option_strings, dest, self._action.nargs, self._action.const,
+                     self._action.default, self._action.type, self._action.choices,
+                     self._action.required, self._action.help, self._action.metavar)
+
+  def add_remove_action(self, *actions: list[AT]):
+    for action in actions:
+      self.removes.append(action)
+
+  def add_remove_key(self, *keys: list[str]):
+    for key in keys:
+      self.remove_keys.append(key)
+
+  def __call__(self, parser, namespace, values, option_string=None) -> None:
+    self._action(parser, namespace, values, option_string)
+    remove_action_keys(parser, self.remove_keys)
+    remove_actions(self.removes)
+
+
 class PathAction(argparse._StoreAction):
   """路径参数动作解析,保证输入的路径必须存在
   """
 
-  def __init__(self, option_strings, dest, must_exist=True, nargs=None, **kwargs) -> None:
+  def __init__(self,
+               option_strings,
+               dest,
+               must_exist=True,
+               nargs=None,
+               const=None,
+               default=None,
+               type=None,
+               choices=None,
+               required=False,
+               help=None,
+               metavar=None,
+               **kwargs) -> None:
     self._must_exist = must_exist
-    super().__init__(option_strings, dest, nargs, **kwargs)
+    super().__init__(option_strings, dest, nargs, const, default, type, choices, required, help, metavar)
 
   def check_value(self, value, option_string):
     path = Path(value).resolve()
     if self._must_exist and not path.exists():
       name = option_string if option_string else self.dest.upper()
-      raise ValueError(_('输入无效的路径: {} {}\n参数帮助:\n\t{}').format(
-          name, path, _format_action_help(self)))
+      raise ValueError(_('输入无效的路径: {} {}\n参数帮助:\n\t{}').format(name, path, _format_action_help(self)))
     return path
 
   def __call__(self, parser, namespace, values, option_string=None) -> None:
@@ -136,17 +292,15 @@ class FileAction(PathAction):
 
     if p.exists() and not p.is_file():
       name = option_string if option_string else self.dest.upper()
-      raise ValueError(_('输入无效的文件路径: {} {}\n参数帮助:\n\t{}').format(
-          name, p, _format_action_help(self)))
+      raise ValueError(_('输入无效的文件路径: {} {}\n参数帮助:\n\t{}').format(name, p, _format_action_help(self)))
 
     if self._must_exist and not p.is_file():
       name = option_string if option_string else self.dest.upper()
-      raise ValueError(_('输入无效的文件路径: {} {}\n参数帮助:\n\t{}').format(
-          name, p, _format_action_help(self)))
+      raise ValueError(_('输入无效的文件路径: {} {}\n参数帮助:\n\t{}').format(name, p, _format_action_help(self)))
     return p
 
 
-class DirectoryAction(argparse._StoreAction):
+class DirectoryAction(PathAction):
   """目录参数动作解析,保证输入的路径是有效的目录
   """
 
@@ -154,12 +308,10 @@ class DirectoryAction(argparse._StoreAction):
     p = Path(value).resolve()
     if p.exists() and not p.is_dir():
       name = option_string if option_string else self.dest.upper()
-      raise ValueError(_('输入无效的目录: {} {}\n参数帮助:\n\t{}').format(
-          name, p, _format_action_help(self)))
+      raise ValueError(_('输入无效的目录: {} {}\n参数帮助:\n\t{}').format(name, p, _format_action_help(self)))
     if self._must_exist and not p.is_dir():
       name = option_string if option_string else self.dest.upper()
-      raise ValueError(_('输入无效的目录: {} {}\n参数帮助:\n\t{}').format(
-          name, p, _format_action_help(self)))
+      raise ValueError(_('输入无效的目录: {} {}\n参数帮助:\n\t{}').format(name, p, _format_action_help(self)))
     return p
 
 
@@ -214,13 +366,23 @@ class EnumAction(argparse.Action):
       argparse (_type_): 普通动作
   """
 
-  def __init__(self, option_strings, dest, nargs=None, **kwargs) -> None:
-    enum_type = kwargs.pop('type', None)
-    default_value = kwargs.pop('default', None)
+  def __init__(self,
+               option_strings,
+               dest,
+               nargs=None,
+               const=None,
+               default=None,
+               type=None,
+               choices=None,
+               required=False,
+               help=None,
+               metavar=None,
+               **kwargs) -> None:
+    enum_type = type
+    default_value = default
 
     if enum_type is None and default_value is None:
-      raise ValueError(
-          'type or default value must be assigned an Enum when using EnumAction')
+      raise ValueError('type or default value must be assigned an Enum when using EnumAction')
 
     if enum_type is not None and not issubclass(enum_type, enum.Enum):
       raise TypeError('type must be an Enum when using EnumAction')
@@ -229,12 +391,10 @@ class EnumAction(argparse.Action):
       if isinstance(default_value, (set, list)):
         if len(default_value) == 0:
           raise ValueError('default collection cannot be empty')
-        if not all(issubclass(type(value), enum.Enum) for value in default_value):
-          raise ValueError(
-              'default value all element must be an Enum: {}'.format(default_value))
-      elif not issubclass(type(default_value), enum.Enum):
-        raise ValueError(
-            'default value must be an Enum when using EnumAction')
+        if not all(isinstance(value, enum.Enum) for value in default_value):
+          raise ValueError('default value all element must be an Enum: {}'.format(default_value))
+      elif not isinstance(default_value, enum.Enum):
+        raise ValueError('default value must be an Enum when using EnumAction')
 
     if enum_type is None:
       if isinstance(default_value, set):
@@ -246,12 +406,10 @@ class EnumAction(argparse.Action):
       else:
         enum_type = type(default_value)
 
-    # Generate choices from the Enum
     chios = tuple(e.name.lower() for e in enum_type)
-    kwargs['choices'] = chios
     self._enum = enum_type
     self._short = []
-    super().__init__(option_strings, dest, nargs, default=default_value, **kwargs)
+    super().__init__(option_strings, dest, nargs, const, default_value, type, chios, required, help, metavar)
 
   def _find_enum_object(self, name: str) -> TypeVar('AE', bound=enum.Enum):
     """根据参数获取对应的枚举对象,优先查找别名参数,再查找枚举字符串参数
@@ -284,25 +442,39 @@ class NestedAction(argparse.Action):
       argparse (Action): 默认父动作为空
   """
 
-  def __init__(self, option_strings, dest, childs: list[Type[AT]] = [], nargs=None, **kwargs) -> None:
+  def __init__(self,
+               option_strings,
+               dest,
+               childs: list[Type[AT]] = [],
+               nargs=None,
+               const=None,
+               default=None,
+               type=None,
+               choices=None,
+               required=False,
+               help=None,
+               metavar=None,
+               *args,
+               ** kwargs) -> None:
     self._childs = []
     self._kwargs = kwargs
-    super().__init__(option_strings, dest, nargs, **kwargs)
-    self.add_child_action(childs)
+    super().__init__(option_strings, dest, nargs, const, default, type, choices, required, help, metavar)
+    self.add_child_action(childs, *args, **kwargs)
+    self._kwargs = None
 
   def __call__(self, parser, namespace, values, option_string=None) -> None:
-    self._kwargs = None
     for action in self._childs:
       if action:
         action.__call__(parser, namespace, values, option_string)
 
-  def add_child_action(self, action_class: list[Type[AT]]) -> List[argparse.Action]:
+  def add_child_action(self, action_class: list[Type[AT]], *args, **kwargs) -> List[argparse.Action]:
     for item_class in action_class:
-      action = item_class(self.option_strings, self.dest,
-                          nargs=self.nargs, const=self.const,
-                          default=self.default, type=self.type,
-                          choices=self.choices, required=self.required,
-                          help=self.help, metavar=self.metavar)
+      action = _create_action_object(item_class, self.option_strings, self.dest,
+                                     nargs=self.nargs, const=self.const,
+                                     default=self.default, type=self.type,
+                                     choices=self.choices, required=self.required,
+                                     help=self.help, metavar=self.metavar, *args, **kwargs)
+
       self._childs.append(action)
       # 更新子选项影响的参数
       self.__dict__.update(action.__dict__)
@@ -316,26 +488,6 @@ class NestedAction(argparse.Action):
 
   def get_actions(self):
     return self._childs
-
-
-class ArgumentEnum(enum.Enum):
-  """作为参数的枚举时, 默认输出字符串是: 类名.成员名,更改为 成员名
-  """
-
-  def __str__(self):
-    return '%s' % (self._name_)
-
-
-class ArgumentNameEnum(ArgumentEnum):
-  """获取枚举值时取 枚举对象.name
-  """
-  pass
-
-
-class ArgumentValueEnum(ArgumentEnum):
-  """获取枚举值时取 枚举对象.value, 如果 value 是列表则默认取第一个元素
-  """
-  pass
 
 
 class StoreTrueAction(argparse._StoreConstAction):
@@ -377,21 +529,31 @@ class StoreFalseAction(argparse._StoreConstAction):
 
 
 class IntMaxMinAction(argparse._StoreAction):
-  """限制了输入 int 参数的最大和最小值
+  """限制了输入 int 参数的最大和最小值[min, max]
   """
 
-  def __init__(self, option_strings, dest, nargs=None, min=0, max=100, **kwargs) -> None:
+  def __init__(self, option_strings,
+               dest,
+               min=0,
+               max=100,
+               nargs=None,
+               const=None,
+               default=None,
+               type=None,
+               choices=None,
+               required=False,
+               help=None,
+               metavar=None,
+               **kwargs) -> None:
     self.min = min
     self.max = max
-    kwargs['type'] = int
-    super().__init__(option_strings, dest, nargs, **kwargs)
+    super().__init__(option_strings, dest, nargs, const, default, int, choices, required, help, metavar)
 
   def __call__(self, parser, namespace, values, option_string=None) -> None:
     super().__call__(parser, namespace, values, option_string)
     v = getattr(namespace, self.dest)
     if v < self.min or v > self.max:
-      raise ValueError(_('输入参数(`{}`)范围错误, 期望范围: {} ~ {}, 实际输入: {}').format(
-          option_string, self.min, self.max, v))
+      raise ValueError(_('输入参数(`{}`)范围错误, 期望范围: {} ~ {}, 实际输入: {}').format(option_string, self.min, self.max, v))
 
 
 class SubArgumentsAction(argparse._SubParsersAction):
@@ -411,8 +573,7 @@ class SubArgumentsAction(argparse._SubParsersAction):
 
   def __init__(self, option_strings, prog='SubArgument', parser_class=argparse.ArgumentParser, dest=argparse.SUPPRESS,
                required=False, help=None, metavar=None, parse_help=False, extend_help=False):
-    super().__init__(option_strings, prog, parser_class,
-                     dest, required=required, help=help, metavar=metavar)
+    super().__init__(option_strings, prog, parser_class, dest, required=required, help=help, metavar=metavar)
     # 这里需要更改子参数的参数数量,因为我们不再需要传递一个子选项值,但实际可以传递,如果未传递则使用默认值
     self.nargs = argparse.REMAINDER
     self._default_parse_name = None
@@ -465,7 +626,10 @@ class SubArgumentsAction(argparse._SubParsersAction):
       formatter.add_usage(parser.usage, positionals, groups, '')
       self._prog_prefix = formatter.format_help().strip()
 
-  def __call__(self, parser: argparse.ArgumentParser, namespace: argparse.Namespace, values: list[str] | None, option_string: str | None = ...) -> None:
+  def __call__(self, parser: argparse.ArgumentParser,
+               namespace: argparse.Namespace,
+               values: list[str] | None,
+               option_string: str | None = ...) -> None:
     if values:
       parser_name = values[0]
       if self._parse_help and (parser_name == '-h' or parser_name == '--help'):
@@ -498,12 +662,11 @@ class SubArgumentsAction(argparse._SubParsersAction):
     formatter_class = kwargs.pop('formatter_class', DefaultsHelpFormatter)
     prog = kwargs.pop('prog', None)
     if prog is None:
-      prog = '%s %s' % (self._prog_prefix,
-                        name) if self._parse_help else self._prog_prefix
+      prog = '%s %s' % (self._prog_prefix, name) if self._parse_help else self._prog_prefix
 
     if self.extend_help:
       kwargs.pop('help', None)
-    parser = super().add_parser(name, formatter_class=formatter_class, prog=prog,  **kwargs)
+    parser = super().add_parser(name, formatter_class=formatter_class, prog=prog, **kwargs)
     # 第一个添加的解析器是默认解析器
     if self.extend_help and len(self._choices_actions) > 0:
       # 为伪action添加标志,后续格式化处理
@@ -520,10 +683,12 @@ class CondSubArgumentAction(SubArgumentsAction):
     if callback is None:
       raise ArgumentError(_('条件子命令参数必须指定一个可回调的参数处理函数 callback 不能为空'))
     self.callback = callback
-    super().__init__(option_strings, prog, parser_class, dest,
-                     required, help, metavar, parse_help, extend_help)
+    super().__init__(option_strings, prog, parser_class, dest, required, help, metavar, parse_help, extend_help)
 
-  def __call__(self, parser: argparse.ArgumentParser, namespace: argparse.Namespace, values: list[str] | None, option_string: str | None = ...) -> None:
+  def __call__(self, parser: argparse.ArgumentParser,
+               namespace: argparse.Namespace,
+               values: list[str] | None,
+               option_string: str | None = ...) -> None:
     if self.callback(namespace, self):
       return super().__call__(parser, namespace, values, option_string)
 
@@ -545,8 +710,7 @@ class CondArgumentAction(argparse._StoreAction):
     if callback is None:
       raise ArgumentError(_('条件参数必须指定一个可回调的参数处理函数 callback 不能为空'))
     self.callback = callback
-    super().__init__(option_strings, dest, nargs, const,
-                     default, type, choices, required, help, metavar)
+    super().__init__(option_strings, dest, nargs, const, default, type, choices, required, help, metavar)
     self.nargs = argparse.PARSER
 
   def __call__(self, parser, namespace, values, option_string: str | None = ...) -> None:
@@ -563,8 +727,27 @@ class TopSubArgumentsAction(SubArgumentsAction):
 
   def __init__(self, option_strings, prog='SubArgument', parser_class=argparse.ArgumentParser,
                dest=argparse.SUPPRESS, required=False, help=None, metavar=None, extend_help=False):
-    super().__init__(option_strings, prog, parser_class,
-                     dest, required, help, metavar, True, extend_help)
+    super().__init__(option_strings, prog, parser_class, dest, required, help, metavar, True, extend_help)
+
+
+class ArgumentEnum(enum.Enum):
+  """作为参数的枚举时, 默认输出字符串是: 类名.成员名,更改为 成员名
+  """
+
+  def __str__(self):
+    return '%s' % (self._name_)
+
+
+class ArgumentNameEnum(ArgumentEnum):
+  """获取枚举值时取 枚举对象.name
+  """
+  pass
+
+
+class ArgumentValueEnum(ArgumentEnum):
+  """获取枚举值时取 枚举对象.value, 如果 value 是列表则默认取第一个元素
+  """
+  pass
 
 
 class DefaultsHelpFormatter(argparse.HelpFormatter):
@@ -596,7 +779,7 @@ class DefaultsHelpFormatter(argparse.HelpFormatter):
   def _get_nested_help_string(self, action: NestedAction):
     actions = []
     for a in action.get_actions():
-      if isinstance(a, RequiredAction):
+      if isinstance(a, _RequiredAction):
         actions.extend(a.get_requires())
     if len(actions) == 0:
       return ''
@@ -605,7 +788,7 @@ class DefaultsHelpFormatter(argparse.HelpFormatter):
   def _get_sub_arguments_help_string(self, action: SubArgumentsAction):
     return ''
 
-  def _get_required_help_string(self, action: RequiredAction):
+  def _get_required_help_string(self, action: _RequiredAction):
     actions = action.get_requires()
     if len(actions) == 0:
       return ''
@@ -615,7 +798,7 @@ class DefaultsHelpFormatter(argparse.HelpFormatter):
     help = action.help
     if isinstance(action, NestedAction):
       help += self._get_nested_help_string(action)
-    if isinstance(action, RequiredAction):
+    if isinstance(action, _RequiredAction):
       help += self._get_required_help_string(action)
     if isinstance(action, SubArgumentsAction):
       help += self._get_sub_arguments_help_string(action)
@@ -726,8 +909,7 @@ class DefaultsHelpFormatter(argparse.HelpFormatter):
   def _get_default_metavar_for_positional(self, action):
     value = ''
     if isinstance(action, SubArgumentsAction):
-      value = self._get_default_metavar_for_subargument_positional(
-          action)
+      value = self._get_default_metavar_for_subargument_positional(action)
     elif getattr(action, 'extend_help', False):
       return ''
     if value:
@@ -880,7 +1062,10 @@ class BaseSerialization():
 ST = TypeVar('ST', bound=BaseSerialization)
 
 
-def add_default_subparse_value(parse: argparse.ArgumentParser, default_value: str, args=None, overload_sys_args: bool = True) -> list[str]:
+def add_default_subparse_value(parse: argparse.ArgumentParser,
+                               default_value: str,
+                               args=None,
+                               overload_sys_args: bool = True) -> list[str]:
   """为子解析器添加默认的选项,不处理子解析器中嵌套解析器,
   如果要嵌套处理则获取子解析器中的 解析器 再次调用即可
   只支持在命令行开头指定位置参数,可以包含其它位置参数,但他们的参数数量都该为1,否则不好区分位置参数
@@ -984,8 +1169,7 @@ def init_argument_information(args: dict[str, ArgumentBean], obj: object):
         short = '-' + short.replace('_', '-') if short else None
         bean._items.append(short)
 
-    long_name = bean.long_key.replace(
-        '_', '-') if bean.long_key else key.replace('_', '-')
+    long_name = bean.long_key.replace('_', '-') if bean.long_key else key.replace('_', '-')
     if not bean.positional:
       long_name = '--' + long_name
     bean._items.append(long_name)

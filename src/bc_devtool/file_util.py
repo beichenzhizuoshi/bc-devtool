@@ -17,8 +17,7 @@ from typing import List
 import chardet
 
 
-_ = gettext.translation('arg_actions', Path.joinpath(
-    Path(__file__).parent, 'locale'), fallback=True).gettext
+_ = gettext.translation('arg_actions', Path.joinpath(Path(__file__).parent, 'locale'), fallback=True).gettext
 
 
 def read_file_to_lines(path: Path, strip: bool = True, callback: Callable[[str], str] = None,
@@ -338,8 +337,7 @@ class FileConverter():
     return True
 
   def _write_file_action(self) -> bool:
-    need_write = self._changed or (
-        self.output != self.input and self.no_change_copy_file)
+    need_write = self._changed or (self.output != self.input and self.no_change_copy_file)
 
     if need_write:
       make_sure_file_path(self.output)
@@ -364,8 +362,7 @@ class FileConverter():
     if info:
       self.from_encoding = info.name
     else:
-      result.failed().failed_reson(
-          _('输入文件 {} 编码不支持: {}').format(self.input, self.from_encoding))
+      result.failed().failed_reson(_('输入文件 {} 编码不支持: {}').format(self.input, self.from_encoding))
       return False
 
     if not self.to_encoding:
@@ -375,8 +372,7 @@ class FileConverter():
       if info:
         self.to_encoding = info.name
       else:
-        result.failed().failed_reson(
-            _('输入文件 {} 不能转换为不支持的编码: {}').format(self.input, self.to_encoding))
+        result.failed().failed_reson(_('输入文件 {} 不能转换为不支持的编码: {}').format(self.input, self.to_encoding))
         return False
     self.hook_encoding()
     self._guessed = True
@@ -398,11 +394,9 @@ class FileConverter():
       self.callback.transform_encoding(
           self.input, self.output, self.from_encoding, self.to_encoding)
       self._changed = True
-      result.changed().add_info(_('转换文件 {} 编码成功: {} =====> {}').format(
-          self.input, self.from_encoding, self.to_encoding))
+      result.changed().add_info(_('转换文件 {} 编码成功: {} =====> {}').format(self.input, self.from_encoding, self.to_encoding))
     except UnicodeDecodeError as e:
-      result.failed().failed_reson(_('文件 {} 编码 {} 与实际不匹配, 失败原因: {}').format(
-          self.input, self.from_encoding, str(e)))
+      result.failed().failed_reson(_('文件 {} 编码 {} 与实际不匹配, 失败原因: {}').format(self.input, self.from_encoding, str(e)))
       return False
     except UnicodeEncodeError as e:
       result.failed().failed_reson(_('文件 {} 编码转换错误: {} =====> {}, 失败原因: {}').format(
@@ -423,10 +417,8 @@ class FileConverter():
     changed = old_len != len(self._content) or old_content != self._content
     self._changed |= changed
     if changed:
-      self.callback.replace_content(
-          self.input, self.output, from_bytes, to_bytes)
-      result.changed().add_info(_('替换文件 {} 内容成功: {} =====> {}').format(
-          self.input, from_bytes, to_bytes))
+      self.callback.replace_content(self.input, self.output, from_bytes, to_bytes)
+      result.changed().add_info(_('替换文件 {} 内容成功: {} =====> {}').format(self.input, from_bytes, to_bytes))
     else:
       result.unchanged()
     return True
@@ -442,13 +434,10 @@ class FileConverter():
       if is_contains_chinese(content):
         self._content: bytes = content.encode(self.to_encoding)
         self._changed = True
-        self.callback.transform_chinese(
-            self.input, self.output, self.from_encoding, self.to_encoding)
-        result.changed().add_info(_('转换包含中文的文件 {} 编码: {} =====> {}').format(
-            self.input, self.from_encoding, self.to_encoding))
+        self.callback.transform_chinese(self.input, self.output, self.from_encoding, self.to_encoding)
+        result.changed().add_info(_('转换包含中文的文件 {} 编码: {} =====> {}').format(self.input, self.from_encoding, self.to_encoding))
     except UnicodeDecodeError as e:
-      result.failed().failed_reson('文件 {} 编码 {} 与实际不匹配, 失败原因: {}'.format(
-          self.input, self.from_encoding, str(e)))
+      result.failed().failed_reson('文件 {} 编码 {} 与实际不匹配, 失败原因: {}'.format(self.input, self.from_encoding, str(e)))
       return False
     except UnicodeEncodeError as e:
       result.failed().failed_reson(_('文件 {} 编码转换错误: {} =====> {}, 失败原因: {}').format(
@@ -469,10 +458,8 @@ class FileConverter():
     # ascii 编码则可以任意转换
     ret = self.from_encoding == encoding or encoding == 'ascii'
     if not ret:
-      self.callback.check_encoding(
-          self.input, self.output, encoding, self.from_encoding)
-      result.failed().failed_reson(_('检测文件 {} 编码不匹配: {} =====> {}').format(
-          self.input, encoding, self.from_encoding))
+      self.callback.check_encoding(self.input, self.output, encoding, self.from_encoding)
+      result.failed().failed_reson(_('检测文件 {} 编码不匹配: {} =====> {}').format(self.input, encoding, self.from_encoding))
     return ret
 
   def add_action(self, action: FileConvertAction, **kwargs) -> None:
@@ -492,8 +479,7 @@ class FileConverter():
       from_bytes = kwargs.pop('from', None)
       to_bytes = kwargs.pop('to', None)
       if from_bytes == to_bytes:
-        logging.warning(
-            _('转换内容前后一致 {} =====> {}').format(from_bytes, to_bytes))
+        logging.warning(_('转换内容前后一致 {} =====> {}').format(from_bytes, to_bytes))
         return
       if from_bytes is None:
         from_bytes = b''

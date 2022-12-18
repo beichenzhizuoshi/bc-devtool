@@ -15,8 +15,7 @@ from bc_devtool import arg_actions as aa
 from bc_devtool import utils
 from bc_devtool.utils import simple_log
 
-_ = gettext.translation('configurator', Path.joinpath(
-    Path(__file__).parent, 'locale'), fallback=True).gettext
+_ = gettext.translation('configurator', Path.joinpath(Path(__file__).parent, 'locale'), fallback=True).gettext
 AT = TypeVar('AT', bound=argparse.Action)
 
 _UNSET = object()
@@ -66,8 +65,7 @@ class ConfigParserChain():
   def add_config_path(self, path: Path, create=False, overload=False, overload_section=DEFAULTSECT) -> None:
     if not hasattr(self, '_configs'):
       self._configs: list[configparser.ConfigParser] = []
-    config = configparser.ConfigParser(
-        interpolation=configparser.ExtendedInterpolation())
+    config = configparser.ConfigParser(interpolation=configparser.ExtendedInterpolation())
     files = config.read(path, encoding='utf-8')
     # 配置文件不存在则忽略它
     if len(files) == 0:
@@ -84,8 +82,7 @@ class ConfigParserChain():
   def get(self, section, option, raw=False, vars=None, fallback=_UNSET):
     # 依此访问所有对象是否包含该值
     for config in self._configs:
-      val = config.get(section, option, raw=raw,
-                       vars=vars, fallback=_UNSET)
+      val = config.get(section, option, raw=raw, vars=vars, fallback=_UNSET)
       if val is not _UNSET:
         break
     if val is _UNSET and val is fallback:
@@ -103,28 +100,24 @@ class ConfigParserChain():
     Returns:
         _type_: None
     """
-    ConfigParserChain.section_set_value(
-        self._configs[0], section, option, value)
+    ConfigParserChain.section_set_value(self._configs[0], section, option, value)
 
   def set_path(self, path: Path, section: str, option: str, value: str = None) -> None:
-    ConfigParserChain.section_set_value(
-        self.find_config(path, True), section, option, value)
+    ConfigParserChain.section_set_value(self.find_config(path, True), section, option, value)
 
   def find_config(self, path: Path, check=True) -> configparser.ConfigParser:
     for config in self._configs:
       if config.path == path:
         return config
     if check:
-      raise ArgumentError(
-          _('没找到指定的配置文件,如果不存在请先创建它再获取配置: {}').format(path))
+      raise ArgumentError(_('没找到指定的配置文件,如果不存在请先创建它再获取配置: {}').format(path))
     return None
 
   def save(self, space_around_delimiters=True):
     """保存配置到文件,还是保存到同一位置
     """
     for config in self._configs:
-      ConfigParserChain.write_to_file(
-          config, config.path, space_around_delimiters)
+      ConfigParserChain.write_to_file(config, config.path, space_around_delimiters)
 
   def write_path(self, orig_path: Path, new_path: Path) -> None:
     """重写指定路径配置文件到新路径
@@ -133,8 +126,7 @@ class ConfigParserChain():
         orig_path (Path): 原始配置文件路径
         new_path (Path): 新配置文件路径
     """
-    ConfigParserChain.write_to_file(
-        self.find_config(orig_path, True), new_path)
+    ConfigParserChain.write_to_file(self.find_config(orig_path, True), new_path)
 
   def write(self, fp, space_around_delimiters: bool = True) -> None:
     """重写写入函数,因为我们已经跟踪了路径,则没有必要指定另外的路径,
@@ -143,8 +135,7 @@ class ConfigParserChain():
     self.save(space_around_delimiters)
 
   def save_path(self, path: Path, space_around_delimiters=True):
-    ConfigParserChain.write_to_file(
-        self.find_config(path), path, space_around_delimiters)
+    ConfigParserChain.write_to_file(self.find_config(path), path, space_around_delimiters)
 
   def remove_option(self, section: str, option: str) -> bool:
     """默认只移除最高优先级的选项
@@ -256,7 +247,11 @@ class Configurator():
 
   element_types = [int, bool, str]
 
-  def __init__(self, path: Path = utils.global_config_path, section: str = DEFAULTSECT, obj: object = None, file_priority=False, overload=True) -> None:
+  def __init__(self, path: Path = utils.global_config_path,
+               section: str = DEFAULTSECT,
+               obj: object = None,
+               file_priority=False,
+               overload=True) -> None:
     """初始化一个配置管理器,与 ConfigParser 有以下不同
     1. 更多的操作数据方式,添加 list, path 等操作
     2. 提供对象模式,可以从对象和配置文件中读取配置,可以设置优先级
@@ -284,7 +279,6 @@ class Configurator():
     """ 转发方法调用,适当的转发到 配置文件对象和配置对象上,优先转发到配置文件上
     """
     if hasattr(self._config, name) and callable(getattr(self._config, name)):
-      #
       return lambda *args, **kwargs: getattr(self._config, name)(*args, **kwargs)
 
     if hasattr(self._obj, name) and callable(getattr(self._obj, name)):
@@ -418,11 +412,11 @@ class Configurator():
           raise ArgumentError('无效目录路径: {}'.format(path))
     return paths
 
-  def get_string_list(self,  key: str, obj: object = None, section: str = None, fallback: object = _UNSET) -> list[str]:
+  def get_string_list(self, key: str, obj: object = None, section: str = None, fallback: object = _UNSET) -> list[str]:
     val = self.get_string(key, obj, section, fallback)
     return val.split(self.separator) if val else None
 
-  def get_int(self,  key: str, obj: object = None, section: str = None, fallback: object = _UNSET) -> int:
+  def get_int(self, key: str, obj: object = None, section: str = None, fallback: object = _UNSET) -> int:
     val = self._get_value(key, section, obj, fallback)
     if val is None:
       return None
@@ -435,7 +429,7 @@ class Configurator():
       return 1 if val else 0
     raise ArgumentError(_('期望输入类型为 int, 实际输入类型是: {}').format(type(val)))
 
-  def get_int_list(self,  key: str, obj: object = None, section: str = None, fallback: object = _UNSET) -> list[int]:
+  def get_int_list(self, key: str, obj: object = None, section: str = None, fallback: object = _UNSET) -> list[int]:
     val = self.get_string(key, obj, section, fallback)
     if val is None:
       return None
@@ -445,8 +439,7 @@ class Configurator():
       return val
 
     if type(val) != str:
-      raise ArgumentError(
-          _('期望输入类型为 str, 实际输入类型是: {}').format(type(val)))
+      raise ArgumentError(_('期望输入类型为 str, 实际输入类型是: {}').format(type(val)))
 
     res: list[int] = list()
     for v in val.split(self.separator):
@@ -494,8 +487,7 @@ class Configurator():
       elif v == 'false' or v == 'off' or v == 'no' or v == '0':
         res.append(False)
       else:
-        raise ArgumentError(
-            _('无效参数({})不能转换为 bool 值: {}').format(key, v))
+        raise ArgumentError(_('无效参数({})不能转换为 bool 值: {}').format(key, v))
     return res
 
   def set(self, key: str, value: any, section: str = None) -> None:
@@ -608,8 +600,7 @@ class Configurator():
         continue
       # 过滤值
       ty0 = obj.get_variable_type(attr)
-      ty1 = obj.get_list_element_type(
-          attr) if ty0 == list or ty0 == set else None
+      ty1 = obj.get_list_element_type(attr) if ty0 == list or ty0 == set else None
       val = self.get_value_of_type(attr, None, section, ty0, ty1, None)
       if val is not None:
         setattr(obj, attr, val)
@@ -628,9 +619,8 @@ class Configurator():
     return objs
 
 
-def _change_configure(options: argparse.Namespace):
-  path: Path = options.system_file if getattr(
-      options, 'global') else options.file
+def change_configure(options: argparse.Namespace):
+  path: Path = options.system_file if getattr(options, 'global') else options.file
   if not options.view and path.exists() and not path.is_file():
     simple_log.error(_('输入的配置文件路径是目录而非文件: %s'), path)
     return
@@ -670,8 +660,7 @@ def _change_configure(options: argparse.Namespace):
 
       name = bean.ty.__name__ if bean.ty else 'str'
       name = '{}: {}'.format(key, name)
-      simple_log.info('    {: <30} # {}'.format(
-          name, bean.tips if bean.tips else _('无选项描述信息')))
+      simple_log.info('    {: <30} # {}'.format(name, bean.tips if bean.tips else _('无选项描述信息')))
   else:
     callable = getattr(options, 'check_configure_path', None)
     if callable is not None and not callable(path, not getattr(options, 'global', False)):
@@ -687,9 +676,15 @@ def _change_configure(options: argparse.Namespace):
     config.save()
 
 
-def add_global_config_argument(parser: argparse.ArgumentParser, sub_parser: aa.SubArgumentsAction,
-                               help=_('配置文件修改'), global_file=utils.global_config_path, local_file=Path.cwd(),
-                               section='DEFAULT', local_help=_('指定当前配置文件路径'), hide_section=False):
+def add_global_config_argument(parser: argparse.ArgumentParser,
+                               sub_parser: aa.SubArgumentsAction,
+                               help=_('配置文件修改'),
+                               global_file=utils.global_config_path,
+                               local_file=Path.cwd(),
+                               section='DEFAULT',
+                               local_help=_('指定当前配置文件路径'),
+                               hide_section=False,
+                               hide_keys=[]) -> argparse.ArgumentParser:
   """为命令添加通用的配置文件处理
 
   配置命令是作为子命令来处理的,因此需要子命令处理器
@@ -703,15 +698,14 @@ def add_global_config_argument(parser: argparse.ArgumentParser, sub_parser: aa.S
       _type_: 已添加的子命令解析器,可以自定义添加参数
   """
   config_parser = sub_parser.add_parser('config', help=help)
-  config_parser.add_argument(
-      '-g', '--global', help=_('使用全局配置文件'), action='store_true')
+  config_parser.add_argument('-g', '--global', help=_('使用全局配置文件'), action='store_true')
 
   group = config_parser.add_mutually_exclusive_group()
   group.add_argument('-l', '--list', help=_('查看配置文件'), action='store_true')
   group.add_argument('-d', '--delete', help=_('删除配置文件'), action='store_true')
-  group.add_argument('--unset-all', help=_('删除当前节区的所有键'))
-  unset_subparser: aa.SubArgumentsAction = group.add_argument(
-      '--unset', action=aa.SubArgumentsAction, help=_('删除指定键'))
+  group.add_argument('--unset-all', help=_('删除当前节区的所有键'), action='store_true')
+
+  unset_subparser: aa.SubArgumentsAction = group.add_argument('--unset', action=aa.SubArgumentsAction, help=_('删除指定键'))
   group.add_argument('-v', '--view', help=_('查看可配置的选项'), action='store_true')
 
   config_parser.add_argument('-f', '--file', help=local_help, default=local_file,
@@ -719,24 +713,26 @@ def add_global_config_argument(parser: argparse.ArgumentParser, sub_parser: aa.S
   config_parser.add_argument('-s', '--system_file', help=_('指定全局配置文件路径'),
                              action=aa.FileAction, default=global_file, must_exist=False)
 
-  config_parser.add_argument(
-      '--section', help=argparse.SUPPRESS if hide_section else _('节区名字'), default=section)
+  config_parser.add_argument('--section', help=argparse.SUPPRESS if hide_section else _('节区名字'), default=section)
 
   unset_subparser.set_program_name(parser)
   unset_parser = unset_subparser.add_parser('unset')
   unset_parser.add_argument('key', help=_('键名称'))
 
-  def cond(n, a):
-    if getattr(n, 'list', False):
+  def cond(namespace, action):
+    if getattr(namespace, 'list', False):
       return False
-    if getattr(n, 'unset', False):
+    if getattr(namespace, 'unset', False):
       return False
-    if getattr(n, 'delete', False):
+    if getattr(namespace, 'delete', False):
       return False
-    if getattr(n, 'unset_all', False):
+    if getattr(namespace, 'unset_all', False):
       return False
-    if getattr(n, 'view', False):
+    if getattr(namespace, 'view', False):
       return False
+    for key in hide_keys:
+      if getattr(namespace, key, False):
+        return False
     return True
 
   params: aa.CondSubArgumentAction = config_parser.add_argument(
@@ -745,7 +741,6 @@ def add_global_config_argument(parser: argparse.ArgumentParser, sub_parser: aa.S
   params.set_program_name(parser)
   params_parser = params.add_parser('params', help=_('选项帮助'))
   params_parser.add_argument('key', help=_('键名称'))
-  params_parser.add_argument('value', help=_(
-      '设置要修改的值,支持str,int,bool,路径和对应的list类型,使用 `,` 分割list'))
-  config_parser.set_defaults(func=_change_configure)
+  params_parser.add_argument('value', help=_('设置要修改的值,支持str,int,bool,路径和对应的list类型,使用 `,` 分割list'))
+  config_parser.set_defaults(func=change_configure)
   return config_parser

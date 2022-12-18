@@ -14,15 +14,16 @@ from enum import unique
 from pathlib import Path
 from typing import List
 
+import bc_devtool
 from bc_devtool import arg_actions as aa
 from bc_devtool import file_util
 from bc_devtool import utils
 from bc_devtool.utils import simple_log
 from git import Repo
 
-VERSION = '1.0.0'
-_ = gettext.translation('dev_tools', Path.joinpath(
-    Path(__file__).parent, 'locale'), fallback=True).gettext
+
+VERSION = bc_devtool.__version__
+_ = gettext.translation('dev_tools', Path.joinpath(Path(__file__).parent, 'locale'), fallback=True).gettext
 REPO_PATH = '.repo/manifests/default.xml'
 recore_error = None
 
@@ -38,8 +39,7 @@ def filter_non_project_file(path: str):
   Returns:
       bool: 是项目文件返回True,否则返回False
   """
-  filter_suffix = ['.class', '.project',
-                   '.mp4', '.rawproto', '.html', '.bin']
+  filter_suffix = ['.class', '.project', '.mp4', '.rawproto', '.html', '.bin']
   filter_path = ['.vscode', '.gradle']
   for name in filter_path:
     if path.find(name) != -1:
@@ -108,8 +108,7 @@ def git_checkout_file_permission(base_dir: Path, dirs: list[str]):
         if item.b_mode != item.a_mode:
           path = path.joinpath(item.a_path)
           path.chmod(item.a_mode)
-          simple_log.warning(
-              'restore file mode: %s, new mode: %o, old mode: %o', path, item.b_mode, item.a_mode)
+          simple_log.warning('restore file mode: %s, new mode: %o, old mode: %o', path, item.b_mode, item.a_mode)
     except Exception as e:
       simple_log.exception('fix file mode error: %s', e)
       recore_error.exception('%s', e)
@@ -140,7 +139,7 @@ def git_diff_file_of_project(base_dir: Path, dir: str, out, restore=False):
       p = path.joinpath(item.a_path)
       if filter_non_project_file(item.a_path):
         if not has_write_head:
-          out.debug('===> project diff: %s\n',  path)
+          out.debug('===> project diff: %s\n', path)
           has_write_head = True
         out.debug('type: %s, path: %s', (item.change_type, p))
 
@@ -191,8 +190,7 @@ def open_windows_case_sensitive(arg):
   Args:
       arg (object): 传入参数
   """
-  cmd = 'fsutil.exe file SetCaseSensitiveInfo %s ' + \
-      ('enable' if arg.disable else 'disable')
+  cmd = 'fsutil.exe file SetCaseSensitiveInfo %s ' + ('enable' if arg.disable else 'disable')
   logging.error(cmd)
   for dir in arg.dirs:
     for sub_dir in dir.rglob('**/'):
@@ -243,8 +241,7 @@ def handle_file_encoding(arg):
     if suffix[1:] not in arg.suffixs:
       return
 
-    output = Path.joinpath(out_path, file.relative_to(
-        out_base)) if root and out_path else out_path
+    output = Path.joinpath(out_path, file.relative_to(out_base)) if root and out_path else out_path
     converter = None
     for cmd in arg.cmd:
       if cmd == EncodingTransform.VIEW:
@@ -252,35 +249,29 @@ def handle_file_encoding(arg):
         simple_log.info('file: %s, encoding: %s', file, best)
       else:
         if converter is None:
-          converter = file_util.FileConverter(
-              input=file, out=output, no_change_copy_file=arg.copy)
+          converter = file_util.FileConverter(input=file, out=output, no_change_copy_file=arg.copy)
         # 先转换编码,再替换字节
         if cmd == EncodingTransform.TRANSFORM_KNOWN:
           converter.from_encoding = getattr(arg, 'from').value
           converter.to_encoding = getattr(arg, 'to').value
-          converter.add_action(
-              file_util.FileConvertAction.transform_encoding)
+          converter.add_action(file_util.FileConvertAction.transform_encoding)
         elif cmd == EncodingTransform.TRANSFORM_AUTO:
           converter.to_encoding = getattr(arg, 'to').value
-          converter.add_action(
-              file_util.FileConvertAction.transform_encoding)
+          converter.add_action(file_util.FileConvertAction.transform_encoding)
         elif cmd == EncodingTransform.CN_TRANSFORM:
           converter.to_encoding = getattr(arg, 'to').value
-          converter.add_action(
-              file_util.FileConvertAction.chinese_transform_encoding)
+          converter.add_action(file_util.FileConvertAction.chinese_transform_encoding)
         elif cmd == EncodingTransform.CRLF_TO_LF:
-          converter.add_action(
-              file_util.FileConvertAction.crlf_to_lf)
+          converter.add_action(file_util.FileConvertAction.crlf_to_lf)
         if cmd == EncodingTransform.LF_TO_CRLF:
-          converter.add_action(
-              file_util.FileConvertAction.lf_to_crlf)
+          converter.add_action(file_util.FileConvertAction.lf_to_crlf)
 
     if converter:
       res = converter.execute()
       if res.is_failed():
         simple_log.error(res.failed_reson)
       else:
-        logging.info('handler file success: %s', path)
+        logging.info('handler file success: %s', file)
 
   def handle_dir(file: Path):
     nonlocal out_base
@@ -311,52 +302,37 @@ def init_arguments():
 
   cmd_c = subparsers.add_parser('case-sensitive', help=_('递归开启或关闭windows目录大小写敏感, 需要管理员权限'),
                                 formatter_class=aa.DefaultsHelpFormatter)
-  cmd_c.add_argument('dirs', nargs='*', help=_('更改的目录'),
-                     default=[os.getcwd()], action=aa.PathAction)
-  cmd_c.add_argument('-d', '--disable',
-                     action='store_true', help=_('关闭大小写敏感'))
+  cmd_c.add_argument('dirs', nargs='*', help=_('更改的目录'), default=[os.getcwd()], action=aa.PathAction)
+  cmd_c.add_argument('-d', '--disable', action='store_true', help=_('关闭大小写敏感'))
   cmd_c.set_defaults(func=open_windows_case_sensitive)
 
   cmd_x = subparsers.add_parser('restore-per', help=_('恢复git仓库下所有文件权限的变化,通常用于文件跨操作系统时丢失权限'),
                                 formatter_class=aa.DefaultsHelpFormatter)
-  cmd_x.add_argument('root', help=_('恢复git仓库的根目录,没有子目录则只处理当前git仓库'),
-                     default=os.getcwd(), action=aa.DirectoryAction)
-  cmd_x.add_argument('-c', '--childs', action='extend',
-                     nargs='+', type=str, help=_('多个git子模块目录,相对于根目录的位置'))
+
+  cmd_x.add_argument('root', help=_('恢复git仓库的根目录,没有子目录则只处理当前git仓库'), default=os.getcwd(), action=aa.DirectoryAction)
+  cmd_x.add_argument('-c', '--childs', action='extend', nargs='+', type=str, help=_('多个git子模块目录,相对于根目录的位置'))
   cmd_x.add_argument(
       '-f', '--file', help=_('包含多个子模块的文件,每一行是一个相对与根目录的子路径'), action=aa.FileAction)
-  cmd_x.add_argument('-a', '--android', action='store_true',
-                     help=_('根目录是Android源码目录,通过读取repo/manifest文件中解析出所有子目录'))
+  cmd_x.add_argument('-a', '--android', action='store_true', help=_('根目录是Android源码目录,通过读取repo/manifest文件中解析出所有子目录'))
   cmd_x.set_defaults(func=restore_git_directories_permission)
 
-  cmd_d = subparsers.add_parser('diff', help=_('读取git模块的更改,保存改变或恢复文件等等'),
-                                formatter_class=aa.DefaultsHelpFormatter)
-  cmd_d.add_argument('root', help=_('git仓库根目录,没有子目录则只处理当前git仓库'),
-                     default=os.getcwd(), action=aa.PathAction)
-  cmd_d.add_argument('-c', '--childs', action='extend',
-                     nargs='+', type=str, help=_('多个git子模块目录,相对于根目录的位置'))
-  cmd_d.add_argument(
-      '-f', '--file', help=_('包含多个子模块的文件,每一行是一个相对与根目录的子路径'), action=aa.FileAction)
+  cmd_d = subparsers.add_parser('diff', help=_('读取git模块的更改,保存改变或恢复文件等等'), formatter_class=aa.DefaultsHelpFormatter)
+  cmd_d.add_argument('root', help=_('git仓库根目录,没有子目录则只处理当前git仓库'), default=os.getcwd(), action=aa.PathAction)
+  cmd_d.add_argument('-c', '--childs', action='extend', nargs='+', type=str, help=_('多个git子模块目录,相对于根目录的位置'))
+  cmd_d.add_argument('-f', '--file', help=_('包含多个子模块的文件,每一行是一个相对与根目录的子路径'), action=aa.FileAction)
   cmd_d.add_argument('-o', '--out', help=_('将输出写入到文件'))
-  cmd_d.add_argument('-r', '--restore',
-                     action='store_true', help=_('恢复已删除的文件'))
-  cmd_d.add_argument('-a', '--android', action='store_true',
-                     help=_('根目录是Android源码目录,通过读取repo/manifest文件中解析出所有子目录'))
+  cmd_d.add_argument('-r', '--restore', action='store_true', help=_('恢复已删除的文件'))
+  cmd_d.add_argument('-a', '--android', action='store_true', help=_('根目录是Android源码目录,通过读取repo/manifest文件中解析出所有子目录'))
   cmd_d.set_defaults(func=git_diff_all_project)
 
-  cmd_m = subparsers.add_parser('merge', help=_('合并多个文件为单个文件,默认为二进制模式合并'),
-                                formatter_class=aa.DefaultsHelpFormatter)
+  cmd_m = subparsers.add_parser('merge', help=_('合并多个文件为单个文件,默认为二进制模式合并'), formatter_class=aa.DefaultsHelpFormatter)
   cmd_m.add_argument('out', help=_('合并后输出的文件'))
-  cmd_m.add_argument('-b', '--binary', action='store_true',
-                     help=_('以二进制模式合并,默认是文本模式'))
-  cmd_m.add_argument('-f', '--files', nargs='+',
-                     help=_('指定要合并的文件集合'), action=aa.FileAction)
-  cmd_m.add_argument('-a', '--append', action='store_true',
-                     help=_('增量模式,添加内容到输出文件的末尾'))
+  cmd_m.add_argument('-b', '--binary', action='store_true', help=_('以二进制模式合并,默认是文本模式'))
+  cmd_m.add_argument('-f', '--files', nargs='+', help=_('指定要合并的文件集合'), action=aa.FileAction)
+  cmd_m.add_argument('-a', '--append', action='store_true', help=_('增量模式,添加内容到输出文件的末尾'))
   cmd_m.set_defaults(func=merge_files_to_file)
 
-  cmd_e = subparsers.add_parser('encoding', help=_(
-      '修改、转换文件编码'), formatter_class=aa.DefaultsHelpFormatter)
+  cmd_e = subparsers.add_parser('encoding', help=_('修改、转换文件编码'), formatter_class=aa.DefaultsHelpFormatter)
 
   encoding_choices_help = {
       'view': _('查看文件编码'),
@@ -367,40 +343,30 @@ def init_arguments():
       'cn_transform': _('检测中文文件编码转换')
   }
 
-  command_action = cmd_e.add_argument('--cmd', type=EncodingTransform, action=aa.NestedAction, help='\n\n'.join(
-      '{}: {}'.format(key, value) for key, value in encoding_choices_help.items()), default=[EncodingTransform.VIEW],
-      childs=[aa.TrueRequiredAction, aa.EnumAction], nargs='*')
+  command_action: aa.TrueRequiredAction = cmd_e.add_argument('--cmd', type=EncodingTransform, action=aa.TrueRequiredAction,
+                                                             action_type=aa.EnumAction,
+                                                             help='\n\n'.join('{}: {}'.format(key, value)
+                                                                              for key, value in encoding_choices_help.items()),
+                                                             default=[EncodingTransform.VIEW], nargs='*')
 
-  cmd_e.add_argument(
-      'files', nargs='*', default=[os.getcwd()], help=_('处理的文件集合'), action=aa.PathAction)
-  cmd_e.add_argument(
-      '--recursive', action=argparse.BooleanOptionalAction, default=True, help=_('递归处理目录'))
-  from_action = cmd_e.add_argument(
-      '-f', '--from', action=aa.EnumAction, type=FileEncoding,  help=_('转换前的编码'))
-  to_action = cmd_e.add_argument(
-      '-t', '--to', action=aa.EnumAction, type=FileEncoding, help=_('转换后的编码'))
+  cmd_e.add_argument('files', nargs='*', default=[os.getcwd()], help=_('处理的文件集合'), action=aa.PathAction)
+  cmd_e.add_argument('--recursive', action=argparse.BooleanOptionalAction, default=True, help=_('递归处理目录'))
 
-  cmd_e.add_argument('-s', '--suffixs', nargs='*',
-                     help=_('过滤指定文件后缀名'), default=SOURCE_SUFFIXS)
-  cmd_e.add_argument('--copy', action='store_true',
-                     help=_('文件未改变时复制文件,默认不复制'))
+  from_action = cmd_e.add_argument('-f', '--from', action=aa.EnumAction, type=FileEncoding, help=_('转换前的编码'))
+  to_action = cmd_e.add_argument('-t', '--to', action=aa.EnumAction, type=FileEncoding, help=_('转换后的编码'))
 
-  cond_action: aa.TrueRequiredAction = command_action.get_action_from_class(
-      aa.TrueRequiredAction)
+  cmd_e.add_argument('-s', '--suffixs', nargs='*', help=_('过滤指定文件后缀名'), default=SOURCE_SUFFIXS)
+  cmd_e.add_argument('--copy', action='store_true', help=_('文件未改变时复制文件,默认不复制'))
+
   # 因为参数是小写的,所以这里要传小写
-  cond_action.add_required(
-      EncodingTransform.TRANSFORM_KNOWN.name.lower(), from_action, to_action)
-  cond_action.add_required(
-      EncodingTransform.TRANSFORM_AUTO.name.lower(), to_action)
-  cond_action.add_required(
-      EncodingTransform.CN_TRANSFORM.name.lower(), to_action)
+  command_action.add_required(EncodingTransform.TRANSFORM_KNOWN.name.lower(), from_action, to_action)
+  command_action.add_required(EncodingTransform.TRANSFORM_AUTO.name.lower(), to_action)
+  command_action.add_required(EncodingTransform.CN_TRANSFORM.name.lower(), to_action)
 
-  cmd_e.add_argument(
-      '-o', '--out', help=_('输出文件或目录,与输入类型对应,当传递多个文件/目录时输出可能会被覆盖'))
+  cmd_e.add_argument('-o', '--out', help=_('输出文件或目录,与输入类型对应,当传递多个文件/目录时输出可能会被覆盖'))
   cmd_e.set_defaults(func=handle_file_encoding)
 
-  parser.add_argument('-v', '--version', action='version',
-                      version=_('实用的命令帮助 %(prog)s 版本: ') + VERSION)
+  parser.add_argument('-v', '--version', action='version', version=_('实用的命令帮助 %(prog)s 版本: ') + VERSION)
   parser.add_argument('--error', help=_('错误日志输出到文件'))
 
   try:

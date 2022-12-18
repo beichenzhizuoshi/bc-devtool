@@ -17,8 +17,7 @@ from bc_devtool.configurator import Configurator
 
 logging = log.getLogger(__name__)
 SECURITY_GROUP_SECTION_NAME = 'security_group'
-_ = gettext.translation('arg_actions', Path.joinpath(
-    Path(__file__).parent, 'locale'), fallback=True).gettext
+_ = gettext.translation('arg_actions', Path.joinpath(Path(__file__).parent, 'locale'), fallback=True).gettext
 
 
 class AliConst:
@@ -81,8 +80,7 @@ def query_domin_ip(domain):
     address = socket.getaddrinfo(domain, 'http')
     return address[0][4][0]
   except Exception as e:
-    logging.error(
-        'query domin ip address failed, domain: %s, error: %s', domain, e)
+    logging.error('query domin ip address failed, domain: %s, error: %s', domain, e)
   return None
 
 
@@ -126,19 +124,13 @@ def change_security_rule(config: Configurator, new_ip: str, old_ip: str, add: bo
   req = AliRequest()
   req.api(AliConst.AuthorizeSecurityGroup if add else AliConst.RevokeSecurityGroup)
   req.addParameter(AliConst.region, config.get_string(AliConst.RegionId))
-  req.addStringParameter(
-      AliConst.RegionId, config.get_string(AliConst.RegionId))
-  req.addStringParameter(AliConst.SecurityGroupId,
-                         config.get_string(AliConst.SecurityGroupId))
-  req.addStringParameter(
-      AliConst.PortRange, config.get_string(AliConst.PortRange))
-  req.addParameter(AliConst.IpProtocol,
-                   config.get_string(AliConst.IpProtocol))
-  req.addStringParameter(AliConst.SourceCidrIp, '%s/32' %
-                         (new_ip if add else old_ip))
+  req.addStringParameter(AliConst.RegionId, config.get_string(AliConst.RegionId))
+  req.addStringParameter(AliConst.SecurityGroupId, config.get_string(AliConst.SecurityGroupId))
+  req.addStringParameter(AliConst.PortRange, config.get_string(AliConst.PortRange))
+  req.addParameter(AliConst.IpProtocol, config.get_string(AliConst.IpProtocol))
+  req.addStringParameter(AliConst.SourceCidrIp, '%s/32' % (new_ip if add else old_ip))
   if add:
-    req.addStringParameter(AliConst.Description,
-                           config.get_string('Description'))
+    req.addStringParameter(AliConst.Description, config.get_string('Description'))
   ret = req.request()
 
   time.sleep(1)
@@ -151,8 +143,7 @@ def change_security_rule(config: Configurator, new_ip: str, old_ip: str, add: bo
     req.addParameter(AliConst.Policy, 'drop')
     req.addParameter(AliConst.Priority, '2')
     if add:
-      req.addStringParameter(AliConst.Description,
-                             config.get_string('dDescription'))
+      req.addStringParameter(AliConst.Description, config.get_string('dDescription'))
     ret |= req.request()
   return ret
 
@@ -170,8 +161,7 @@ def remove_security_group_action(config: Configurator) -> None:
 
 
 def update_security_group(arg: argparse.Namespace):
-  config = Configurator(
-      Path(arg.config), section=SECURITY_GROUP_SECTION_NAME, obj=arg)
+  config = Configurator(Path(arg.config), section=SECURITY_GROUP_SECTION_NAME, obj=arg)
   if arg.delete:
     remove_security_group_action(arg)
     return
@@ -188,8 +178,7 @@ def update_security_group(arg: argparse.Namespace):
       logging.info('successfully add ip rule: %s', ip)
       save_ips.add(ip)
     else:
-      logging.error(
-          'Failed to add ip rule, will not save to file: %s', ip)
+      logging.error('Failed to add ip rule, will not save to file: %s', ip)
   # 删除旧的 ip 集合
   for ip in old_ips - new_ips:
     if change_security_rule(config, ip, ip, False):
@@ -197,15 +186,13 @@ def update_security_group(arg: argparse.Namespace):
     else:
       # 没删除成功则继续保存到列表中
       save_ips.add(ip)
-      logging.error(
-          'Failed to delete ip rule, will continue to save to file: %s', ip)
+      logging.error('Failed to delete ip rule, will continue to save to file: %s', ip)
   if save_ips != old_ips:
     write_ip_list(arg.file, save_ips)
 
 
 def configuration_security_group_file(arg: argparse.Namespace) -> None:
-  config = Configurator(
-      arg.out, section=SECURITY_GROUP_SECTION_NAME, obj=arg)
+  config = Configurator(arg.out, section=SECURITY_GROUP_SECTION_NAME, obj=arg)
   if arg.config == ConfigureFeature.VIEW:
     with open(arg.out, 'r', encoding='utf-8') as f:
       logging.warning('configure content:\n %s', f.read())
@@ -252,11 +239,10 @@ def initArgument():
   # 公共参数
   parser.add_argument('-r', '--' + AliConst.RegionId, help=_('安全组所在区域id'))
   parser.add_argument('-s', '--' + AliConst.SecurityGroupId, help=_('安全组id'))
-  parser.add_argument('-i', '--' + AliConst.IpProtocol,  help=_('ip协议类型'))
-  parser.add_argument('-p', '--' + AliConst.PortRange,   help=_('指定修改的端口'))
+  parser.add_argument('-i', '--' + AliConst.IpProtocol, help=_('ip协议类型'))
+  parser.add_argument('-p', '--' + AliConst.PortRange, help=_('指定修改的端口'))
   parser.add_argument('-des', '--' + AliConst.Description, help=_('规则描述'))
-  parser.add_argument(
-      '-ddes', '--d' + AliConst.Description, help=_('拒绝规则描述'))
+  parser.add_argument('-ddes', '--d' + AliConst.Description, help=_('拒绝规则描述'))
 
   subparse = parser.add_subparsers(description=_('子命令选项'))
   # 安全组配置
@@ -267,12 +253,9 @@ def initArgument():
                             help=_('默认的安全组配置文件,默认从该文件中读取所有参数'), action=arg_actions.FileAction)
   secret_group.add_argument('-f', '--file', help=_('保存旧ip的文件路径'), default='ip.txt',
                             action=arg_actions.FileAction, must_exist=False)
-  secret_group.add_argument(
-      '-d', '--delete', help=_('强制删除ip配置'), action='store_true')
-  secret_group.add_argument(
-      '-j', '--reject', help=_('同时删除或添加拒绝规则'), action='store_true')
-  secret_group.add_argument('--' + AliConst.IpList,
-                            nargs='*', help=_('允许的ip地址列表'))
+  secret_group.add_argument('-d', '--delete', help=_('强制删除ip配置'), action='store_true')
+  secret_group.add_argument('-j', '--reject', help=_('同时删除或添加拒绝规则'), action='store_true')
+  secret_group.add_argument('--' + AliConst.IpList, nargs='*', help=_('允许的ip地址列表'))
   secret_group.add_argument(AliConst.Domains, help='允许的域名集合', nargs='*')
   secret_group.set_defaults(func=update_security_group)
 
@@ -283,8 +266,7 @@ def initArgument():
                             action=arg_actions.FileAction, must_exist=False)
   config_group.add_argument('-c', '--config', action=arg_actions.EnumAction,
                             type=ConfigureFeature, help=_('选择执行的操作'), default=ConfigureFeature.VIEW)
-  config_group.add_argument(
-      '--' + AliConst.IpList, nargs='*',  type=list[str], help=_('默认的固定ip集合,不再走域名查询'))
+  config_group.add_argument('--' + AliConst.IpList, nargs='*', type=list[str], help=_('默认的固定ip集合,不再走域名查询'))
   config_group.add_argument(AliConst.Domains, nargs='*', help=_('默认配置的域名'))
   config_group.set_defaults(func=configuration_security_group_file)
 
