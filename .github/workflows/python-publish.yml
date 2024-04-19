@@ -9,7 +9,9 @@
 name: Upload Python Package
 
 on:
-  create
+  push:
+    tags:
+      - release*
 
 permissions:
   contents: read
@@ -20,9 +22,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Set up Python
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v5
       with:
         python-version: '3.7'
     - name: Install dependencies
@@ -37,7 +39,7 @@ jobs:
         pip install pytest-cov
         pytest --doctest-modules --junitxml=junit/test-results-3.7.xml
     - name: Upload pytest test results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: pytest-results-3.7
         path: junit/test-results-3.7.xml
@@ -45,7 +47,7 @@ jobs:
       run: |
         python -m build --sdist --wheel --outdir dist/ .
     - name: Publish package
-      uses: pypa/gh-action-pypi-publish@v1.5.1
+      uses: pypa/gh-action-pypi-publish@v1.8.14
       with:
         user: __token__
         password: ${{ secrets.PYPI_API_TOKEN }}
