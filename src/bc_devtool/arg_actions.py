@@ -411,7 +411,7 @@ class EnumAction(argparse.Action):
     chios = tuple(e.name.lower() for e in enum_type)
     self._enum = enum_type
     self._short = []
-    super().__init__(option_strings, dest, nargs, const, default_value, type, chios, required, help, metavar)
+    super().__init__(option_strings, dest, nargs, const, default_value, None, chios, required, help, metavar)
 
   def _find_enum_object(self, name: str) -> TypeVar('AE', bound=enum.Enum):
     """根据参数获取对应的枚举对象,优先查找别名参数,再查找枚举字符串参数

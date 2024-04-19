@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # /usr/bin/python3
+# from __future__ import annotations
 from __future__ import annotations
 
 import argparse
@@ -14,7 +15,7 @@ from enum import unique
 from pathlib import Path
 from typing import List
 
-import bc_devtool
+from bc_devtool import __version__
 from bc_devtool import arg_actions as aa
 from bc_devtool import file_util
 from bc_devtool import utils
@@ -22,7 +23,7 @@ from bc_devtool.utils import simple_log
 from git import Repo
 
 
-VERSION = bc_devtool.__version__
+VERSION = __version__
 _ = gettext.translation('dev_tools', Path.joinpath(Path(__file__).parent, 'locale'), fallback=True).gettext
 REPO_PATH = '.repo/manifests/default.xml'
 recore_error = None
@@ -343,11 +344,11 @@ def init_arguments():
       'cn_transform': _('检测中文文件编码转换')
   }
 
-  command_action: aa.TrueRequiredAction = cmd_e.add_argument('--cmd', type=EncodingTransform, action=aa.TrueRequiredAction,
-                                                             action_type=aa.EnumAction,
-                                                             help='\n\n'.join('{}: {}'.format(key, value)
-                                                                              for key, value in encoding_choices_help.items()),
-                                                             default=[EncodingTransform.VIEW], nargs='*')
+  command_action: aa.TrueRequiredAction = cmd_e.add_argument(
+      '--cmd', type=EncodingTransform, action=aa.TrueRequiredAction, bind_value=True, action_type=aa.EnumAction,
+      help='\n\n'.join('{}: {}'.format(key, value) for key, value in encoding_choices_help.items()),
+      default=[EncodingTransform.VIEW],
+      nargs='*')
 
   cmd_e.add_argument('files', nargs='*', default=[os.getcwd()], help=_('处理的文件集合'), action=aa.PathAction)
   cmd_e.add_argument('--recursive', action=argparse.BooleanOptionalAction, default=True, help=_('递归处理目录'))
