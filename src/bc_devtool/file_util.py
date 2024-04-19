@@ -349,13 +349,17 @@ class FileConverter():
   def _guess_input_output_encoding(self, result: FileConverterResult) -> bool:
     if self._guessed:
       return True
-    if not self.from_encoding:
-      attrs = get_binary_encoding(self._content)
-      if attrs['confidence'] < self._confidence:
-        result.failed().failed_reson(_('检测文件 {} 编码 {} 精确度太低: {}, 最小处理精确度: {}').format(
-            self.input, attrs['encoding'], attrs['confidence'], self._confidence))
-        return False
-      self.from_encoding = attrs['encoding']
+
+    attrs = get_binary_encoding(self._content)
+    if attrs['confidence'] < self._confidence:
+      result.failed().failed_reson(_('检测文件 {} 编码 {} 精确度太低: {}, 最小处理精确度: {}').format(
+          self.input, attrs['encoding'], attrs['confidence'], self._confidence))
+      return False
+
+    if self.from_encoding and self.from_encoding != attrs['encoding']:
+      # 当猜测的编译与输入编码不符合时,避免错误应该跳过
+      return False
+    self.from_encoding = attrs['encoding']
 
     # 规范化编码字符串,后续可以直接字符串比较编码
     info = codecs.lookup(self.from_encoding)
